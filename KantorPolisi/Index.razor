@@ -1,0 +1,191 @@
+﻿@page "/kantorpolisi"
+
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+@using Microsoft.EntityFrameworkCore
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Notifications
+@using Syncfusion.Blazor.Popups
+
+@inject Microsoft.AspNetCore.Components.NavigationManager navigation
+@inject ProperBerdasi.Blazapp.Data.MainContext dbContext
+@inject SfDialogService DialogService
+
+<PageTitle>KANTORPOLISI</PageTitle>
+
+<style>
+    #toast_default .e-meeting::before {
+        content: "\e705";
+        font-size: 17px;
+    }
+
+    .bootstrap4 #toast_default .e-meeting::before {
+        content: "\e763";
+        font-size: 20px;
+    }
+</style>
+
+<SfToast ID="toast_default" @ref="ToastObj" Title="KANTORPOLISI"
+         ShowCloseButton="true" ShowProgressBar="true"
+         Content="@ToastContent" Timeout="4000" Icon="e-meeting">
+    <ToastPosition X="@ToastPosition"></ToastPosition>
+</SfToast>
+
+
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h3>KANTORPOLISI</h3>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+        </ol>
+    </div>
+</div>
+
+
+<div class="row">
+    <!-- left column -->
+    <div class="col-md-12">
+        <!-- general form elements -->
+        <div class="card card-info">
+            <div class="card-body">
+                @if (pagedModel == null)
+                {
+                    <p><em>Loading...</em></p>
+                }
+                else
+                {
+                    <p>
+                        <a href="/kantorpolisi/add" class="btn btn-info" role="button">
+                            <i class="fa-regular fa-square-plus"></i> &nbsp; Tambah Data
+                        </a>
+                        &nbsp;                      
+                        <br />
+                    </p>
+
+
+                    <div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width:140px"></th>
+                                    <th>Nama</th>
+                                   
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in pagedModel)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a href='/kantorpolisi/details/@item.Id' class="btn btn-outline-info btn-sm"><i class="fa-solid fa-magnifying-glass"></i></a>
+                                            <a href='/kantorpolisi/edit/@item.Id' class="btn btn-outline-info btn-sm"><i class="fa-solid fa-pencil"></i></a>
+                                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="@(async () => await DeleteConf(item.Id))">
+                                                <i class="fa-solid fa-trash-can"></i></button>
+                                        </td>
+                                        <td>@item.Nama</td>
+										
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                    <SfPager @ref="@Page" PageSize=@PageSize NumericItemsCount=@PageSize TotalItemsCount=@TotalItemCnt ItemClick="Click">
+                    </SfPager>
+
+
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    SfToast ToastObj;
+    private string ToastPosition = "Right";
+    private string ToastContent { get; set; }
+
+    private List<PRPA_KantorPolisi> pagedModel { get; set; }
+
+    SfPager Page;
+	SysPagerState pagerState = new SysPagerState();    
+    // public int SkipValue = 0;
+    // public int TakeValue = 10;
+    // public int TotalItemCnt = 0;
+    // public int PageSize = 10;
+    private int currSkipValue = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+		pagerState.TakeValue = 10;
+
+        pagerState.TotalItemCount  = await dbContext.KantorPolisiSet.CountAsync();
+        pagedModel = await dbContext.KantorPolisiSet.Skip(pagerState.SkipValue).Take(pagerState.TakeValue).ToListAsync();
+    }
+
+    public async void Click(PagerItemClickEventArgs args)
+    {
+        pagerState.TotalItemCount = await dbContext.DokumenHukumSet.CountAsync();
+
+        pagerState.SkipValue = (args.CurrentPage * Page.PageSize) - Page.PageSize;
+        currSkipValue = pagerState.SkipValue;
+        pagerState.TakeValue = Page.PageSize;
+        pagedModel = await dbContext.DokumenHukumSet.Skip(pagerState.SkipValue).Take(pagerState.TakeValue).ToListAsync();
+    }
+
+    private async Task RefreshData()
+    {
+        pagerState.TotalItemCount = await dbContext.DokumenHukumSet.CountAsync();
+        pagerState.TakeValue = Page.PageSize;
+        pagedModel = await dbContext.DokumenHukumSet.Skip(currSkipValue).Take(pagerState.TakeValue).ToListAsync();
+    }
+
+    private async Task DeleteConf(int itemId)
+    {
+        try
+        {
+            PRPA_KantorPolisi delItem = await dbContext.KantorPolisiSet.FindAsync(itemId);
+            if (delItem == null)
+            {
+                return;
+            }
+
+            bool isConfirm = await DialogService.ConfirmAsync(null,
+
+                "Hapus data ini?", new DialogOptions()
+                {
+                    ChildContent=@<p>Nama: @delItem.Nama<br /> </p>
+                });
+
+            string confirmMessage = isConfirm ? "Data Telah Dihapus" : "Hapus data dibatalkan";
+            ToastContent = confirmMessage;
+            
+
+            if (isConfirm)
+            {
+                dbContext.KantorPolisiSet.Remove(delItem);
+                await dbContext.SaveChangesAsync();
+                await RefreshData();                
+                StateHasChanged();
+
+                await this.ToastObj.ShowAsync();
+            }
+            else
+            {                
+                // StateHasChanged();
+                // await this.ToastObj.ShowAsync();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+}

@@ -1,0 +1,116 @@
+﻿@page "/_pageroot/edit/{id}"
+
+@using System.Threading.Tasks;
+@using Microsoft.EntityFrameworkCore;
+
+
+@inject Microsoft.AspNetCore.Components.NavigationManager navigation
+@inject ProperBerdasi.Blazapp.Data.MainContext dbContext;
+@inject IJSRuntime JSRuntime
+
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1>Edit</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <!-- left column -->
+    <div class="col-md-6">
+        <!-- general form elements -->
+        <div class="card card-info">
+            
+            <!-- /.card-header -->
+            <!-- form start -->
+            <EditForm Model="@Model" OnValidSubmit="@(async () => await Submit())">
+
+                <div class="card-body">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <strong>Nama:</strong>
+                        <InputText class="form-control" @bind-Value="@Model.Nama" />
+                    </div>
+            
+
+                </div>
+                <!-- /.card-body -->
+
+                <div class="card-footer">
+                    
+                    <button type="submit" class="btn btn-success">Submit</button>                    
+                    &nbsp;                    
+                    <button class="btn btn-outline-secondary" @onclick="@cancel">Kembali</button>
+                </div>
+            </EditForm>
+        </div>
+        <!-- /.card -->
+
+    </div>
+    <!--/.col (left) -->
+    <!-- right column -->
+
+</div>
+<!-- /.row -->
+
+<div class="row">
+    <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="text-danger">@pesan</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public string id { get; set; }
+
+    int iid = 0;
+
+    _typeModel? Model;
+    string pesan = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!int.TryParse(id, out iid))
+        {
+            navigation.NavigateTo("/NotFound");
+        }
+        base.OnInitialized();
+
+        Model = await dbContext.PenyidikSet.FindAsync(iid);
+        if (Model == null)
+        {
+            navigation.NavigateTo("/NotFound");            
+        }
+    }
+
+    protected async Task Submit()
+    {
+        try
+        {            
+            Model.UpdatedDate = DateTime.Now;
+            dbContext._setModel.Update(Model);
+            await dbContext.SaveChangesAsync();
+            navigation.NavigateTo("/_pageroot");
+        }
+        catch (Exception ex)
+        {
+            pesan = "Terjadi Kesalahan: " + ex.Message;
+        }
+    }
+
+    private void cancel()
+    {
+        navigation.NavigateTo("/_pageroot");
+    }
+    
+}

@@ -1,0 +1,104 @@
+﻿@page "/kantorpolisi/add"
+
+@using System.Threading.Tasks;
+@using Microsoft.EntityFrameworkCore;
+
+
+@inject Microsoft.AspNetCore.Components.NavigationManager navigation
+@inject ProperBerdasi.Blazapp.Data.MainContext dbContext;
+
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1>Data Baru</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <!-- left column -->
+    <div class="col-md-6">
+        <!-- general form elements -->
+        <div class="card card-info">
+
+            <!-- /.card-header -->
+            <!-- form start -->
+            <EditForm Model="@Model" OnValidSubmit="@(async () => await Submit())">
+
+                <div class="card-body">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <strong>Nama:</strong>
+                        <InputText class="form-control" @bind-Value="@Model.Nama" />
+                    </div>
+
+                   
+                </div>
+                <!-- /.card-body -->
+
+                <div class="card-footer">
+
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                    &nbsp;
+                    <button class="btn btn-outline-secondary" @onclick="@cancel">Kembali</button>
+
+                </div>
+            </EditForm>
+        </div>
+        <!-- /.card -->
+
+    </div>
+    <!--/.col (left) -->
+    <!-- right column -->
+
+</div>
+<!-- /.row -->
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="text-danger">@pesan</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    PRPA_KantorPolisi Model = new PRPA_KantorPolisi();
+    string pesan = string.Empty;
+
+    // protected override void OnInitialized() => Model ??= new();
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Model ??= new();
+    }
+
+    protected async Task Submit()
+    {
+        try
+        {
+            // Model.CreatedDate = DateTime.Now;
+            // Model.UpdatedDate = DateTime.Now;
+            dbContext.KantorPolisiSet.Add(Model);
+            await dbContext.SaveChangesAsync();
+            navigation.NavigateTo("/kantorpolisi");
+        }
+        catch (Exception ex)
+        {
+            pesan = "Terjadi Kesalahan: " + ex.Message;
+        }
+
+    }
+    private void cancel()
+    {
+        navigation.NavigateTo("/kantorpolisi");
+    }
+
+}

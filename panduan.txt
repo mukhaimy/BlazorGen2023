@@ -1,0 +1,4 @@
+_pageroot   -->penyidik
+_upageroot   -->PENYIDIK
+_typeModel  -->PRPN_Penyidik
+_setModel   --> PenyidikSet

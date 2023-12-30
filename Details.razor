@@ -1,0 +1,81 @@
+﻿@page "/_pageroot/details/{id}"
+@rendermode InteractiveServer
+
+@inject ProperBerdasi.Blazapp.Data.MainContext dbContext
+@inject IWebHostEnvironment env
+@inject Microsoft.AspNetCore.Components.NavigationManager navigation
+
+<h3>Details</h3>
+
+<div class="row">
+    <!-- left column -->
+    <div class="col-md-12">
+        <!-- general form elements -->
+        <div class="card card-info">
+            <div class="card-body">
+                @if (Model == null)
+                {
+                    <p><em>Loading...</em></p>
+                }
+                else
+                {
+
+                    <div class="callout callout-info">
+                        <h5>_pageroot</h5>
+                    </div>
+                    <dl class="row">
+
+                        <dt class="col-sm-3 bkanan">Nama :</dt>
+                        <dd class="col-sm-9">@Model.Nama</dd>
+
+
+                    </dl>
+
+                    <div>
+
+                        <button class="btn btn-outline-primary" @onclick="@edit">Edit</button>
+                        &nbsp;                        
+						<a href="/_pageroot" class="btn btn-outline-secondary" role="button">Kembali</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public string id { get; set; }
+
+    int iid = 0;
+
+    _typeModel Model = null;
+
+    // protected override async void OnInitialize()
+    protected override async Task OnInitializedAsync()
+    {
+        if (!int.TryParse(id, out iid))
+        {
+            navigation.NavigateTo("/NotFound");
+        }
+        base.OnInitialized();
+
+        Model = await dbContext._setModel.FindAsync(iid);
+        if (Model == null)
+        {
+            navigation.NavigateTo("/NotFound");
+        }
+
+    }
+
+    private void cancel()
+    {
+        navigation.NavigateTo("/_pageroot");
+    }
+
+    void edit()
+    {
+        navigation.NavigateTo("/_pageroot/edit/" + id);
+    }
+}
